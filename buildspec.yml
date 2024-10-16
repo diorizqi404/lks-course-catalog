@@ -8,7 +8,7 @@ env:
 phases:
   install:
     runtime-versions:
-      nodejs: 16  # Pastikan image build mendukung Node.js dan Docker
+      nodejs: 16
   pre_build:
     commands:
       - echo "Install Dependencies and login into ECR"
@@ -17,26 +17,26 @@ phases:
     commands:
       - echo "Run unit testing and build docker image"
       - docker build -t $CONTAINER_NAME:latest . || exit 1
-post_build:
-  commands:
-    - echo "Pushing the image to ECR..."
-    - docker tag $CONTAINER_NAME:latest $ECR_REPO:latest
-    - docker tag $CONTAINER_NAME:latest $ECR_REPO:${CODEBUILD_BUILD_NUMBER}
-    
-    - echo "Pushing the latest image..."
-    - docker push $ECR_REPO:latest || exit 1
-    
-    - echo "Pushing the build number image..."
-    - docker push $ECR_REPO:${CODEBUILD_BUILD_NUMBER} || exit 1
-    
-    - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $ECR_REPO:latest > imagedefinitions.json
-    
-    - if [ -f imagedefinitions.json ]; then
-        echo "imagedefinitions.json file created successfully.";
-      else
-        echo "Failed to create imagedefinitions.json file.";
-        exit 1;
-      fi
+  post_build:  # Sudah berada di dalam phases dengan indentasi yang benar
+    commands:
+      - echo "Pushing the image to ECR..."
+      - docker tag $CONTAINER_NAME:latest $ECR_REPO:latest
+      - docker tag $CONTAINER_NAME:latest $ECR_REPO:${CODEBUILD_BUILD_NUMBER}
+      
+      - echo "Pushing the latest image..."
+      - docker push $ECR_REPO:latest || exit 1
+      
+      - echo "Pushing the build number image..."
+      - docker push $ECR_REPO:${CODEBUILD_BUILD_NUMBER} || exit 1
+      
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $ECR_REPO:latest > imagedefinitions.json
+      
+      - if [ -f imagedefinitions.json ]; then
+          echo "imagedefinitions.json file created successfully.";
+        else
+          echo "Failed to create imagedefinitions.json file.";
+          exit 1;
+        fi
 
 artifacts:
   files:
