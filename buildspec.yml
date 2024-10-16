@@ -17,15 +17,30 @@ phases:
     commands:
       - echo "Run unit testing and build docker image"
       - docker build -t $CONTAINER_NAME:latest .
-  post_build:
-    commands:
-      - echo "Push the image to ECR..."
-      # Tagging the image with build number
-      - docker tag $CONTAINER_NAME:latest $ECR_REPO:latest
-      - docker tag $CONTAINER_NAME:latest $ECR_REPO:${CODEBUILD_BUILD_NUMBER}
-      - docker push $ECR_REPO:latest
-      - docker push $ECR_REPO:${CODEBUILD_BUILD_NUMBER}
-      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $ECR_REPO:latest > imagedefinitions.json
+post_build:
+  commands:
+    - echo "Pushing the image to ECR..."
+    # Tagging the image with 'latest' and build number
+    - docker tag $CONTAINER_NAME:latest $ECR_REPO:latest
+    - docker tag $CONTAINER_NAME:latest $ECR_REPO:${CODEBUILD_BUILD_NUMBER}
+    
+    # Pushing images to ECR
+    - echo "Pushing the latest image..."
+    - docker push $ECR_REPO:latest
+    
+    - echo "Pushing the build number image..."
+    - docker push $ECR_REPO:${CODEBUILD_BUILD_NUMBER}
+    
+    # Generating imagedefinitions.json
+    - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $ECR_REPO:latest > imagedefinitions.json
+    
+    # Verifying the existence of the imagedefinitions.json file
+    - if [ -f imagedefinitions.json ]; then
+        echo "imagedefinitions.json file created successfully.";
+      else
+        echo "Failed to create imagedefinitions.json file.";
+        exit 1;
+      fi
 
 artifacts:
   files:
