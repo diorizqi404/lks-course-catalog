@@ -29,6 +29,7 @@ phases:
       - echo "Pushing the build number image..."
       - docker push $ECR_REPO:${CODEBUILD_BUILD_NUMBER} || exit 1
       
+      # Perubahan di sini untuk memastikan 'imagedefinitions.json' hanya berisi 'latest'
       - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $ECR_REPO:latest > imagedefinitions.json
       
       - if [ -f imagedefinitions.json ]; then
