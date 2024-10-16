@@ -3,7 +3,7 @@ env:
   variables:
     ECR_REPO: 727646491714.dkr.ecr.us-east-1.amazonaws.com/lks-catalog-image
     ECR_REGION: us-east-1
-    CONTAINER_NAME: catalog
+    CONTAINER_NAME: lks-catalog-container
 
 phases:
   install:
