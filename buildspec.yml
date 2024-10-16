@@ -8,33 +8,29 @@ env:
 phases:
   install:
     runtime-versions:
-      nodejs: 16  # Docker version is not needed here; it's handled by the build environment
+      nodejs: 16  # Pastikan image build mendukung Node.js dan Docker
   pre_build:
     commands:
       - echo "Install Dependencies and login into ECR"
-      - aws ecr get-login-password --region $ECR_REGION | docker login --username AWS --password-stdin $ECR_REPO
+      - aws ecr get-login-password --region $ECR_REGION | docker login --username AWS --password-stdin $ECR_REPO || exit 1
   build:
     commands:
       - echo "Run unit testing and build docker image"
-      - docker build -t $CONTAINER_NAME:latest .
+      - docker build -t $CONTAINER_NAME:latest . || exit 1
 post_build:
   commands:
     - echo "Pushing the image to ECR..."
-    # Tagging the image with 'latest' and build number
     - docker tag $CONTAINER_NAME:latest $ECR_REPO:latest
     - docker tag $CONTAINER_NAME:latest $ECR_REPO:${CODEBUILD_BUILD_NUMBER}
     
-    # Pushing images to ECR
     - echo "Pushing the latest image..."
-    - docker push $ECR_REPO:latest
+    - docker push $ECR_REPO:latest || exit 1
     
     - echo "Pushing the build number image..."
-    - docker push $ECR_REPO:${CODEBUILD_BUILD_NUMBER}
+    - docker push $ECR_REPO:${CODEBUILD_BUILD_NUMBER} || exit 1
     
-    # Generating imagedefinitions.json
     - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $ECR_REPO:latest > imagedefinitions.json
     
-    # Verifying the existence of the imagedefinitions.json file
     - if [ -f imagedefinitions.json ]; then
         echo "imagedefinitions.json file created successfully.";
       else
